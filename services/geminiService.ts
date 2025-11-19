@@ -19,9 +19,14 @@ export const generateEtsyListing = async (
   pdfFile: File,
   coverFile: File
 ): Promise<EtsyListing> => {
+  // Ensure we handle the case where process is undefined (common in some browser runtimes)
+  // However, per instructions, we rely on process.env.API_KEY being injected by the build tool.
   const apiKey = process.env.API_KEY;
+
   if (!apiKey) {
-    throw new Error("API Key is missing");
+    throw new Error(
+      "API Key ไม่ถูกต้อง หรือหาไม่เจอ (Missing API Key). กรุณาตรวจสอบการตั้งค่า Environment Variable 'API_KEY' บน Vercel หรือไฟล์ .env"
+    );
   }
 
   const ai = new GoogleGenAI({ apiKey });
@@ -38,7 +43,7 @@ export const generateEtsyListing = async (
       },
       description: {
         type: Type.STRING,
-        description: "A persuasive product description formatted with bullet points, benefits, and specifications.",
+        description: "A persuasive product description. Do NOT include tags or keyword lists at the bottom.",
       },
       tags: {
         type: Type.ARRAY,
@@ -80,7 +85,8 @@ export const generateEtsyListing = async (
     
     Guidelines:
     1. **Title:** Must be keyword-stuffed but readable. Place most important keywords first.
-    2. **Description:** Use a 'Hook', 'Features', 'Benefits', and 'What's Included' structure. Use emoticons to make it readable.
+    2. **Description:** Write a persuasive description using 'Hook', 'Features', 'What's Included', and 'Benefits'. Use emoticons. 
+       **CRITICAL:** Do NOT include a list of tags, keywords, or SEO terms inside the description text body or at the bottom. Tags belong in the separate 'tags' field only.
     3. **Tags:** Provide exactly 13 highly relevant tags. Multi-word tags are better. Max 20 characters per tag.
     4. **Language:** Generate the content primarily in English (as it is the standard for Etsy SEO), unless the book content is strictly in another language.
     

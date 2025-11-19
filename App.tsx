@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UploadCloud, Image as ImageIcon, FileText, AlertCircle, Wand2 } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, FileText, AlertCircle, Wand2, Settings } from 'lucide-react';
 import { generateEtsyListing } from './services/geminiService';
 import { EtsyListing, ProcessingStatus } from './types';
 import { LoadingState } from './components/LoadingState';
@@ -51,9 +51,18 @@ const App: React.FC = () => {
       const data = await generateEtsyListing(pdfFile, coverFile);
       setListingData(data);
       setStatus(ProcessingStatus.SUCCESS);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError('เกิดข้อผิดพลาดในการเชื่อมต่อกับ AI กรุณาลองใหม่อีกครั้ง หรือตรวจสอบ API Key');
+      let errorMessage = 'เกิดข้อผิดพลาดในการเชื่อมต่อกับ AI กรุณาลองใหม่อีกครั้ง';
+      
+      // Check if it's likely an API Key issue
+      if (err.message?.includes("API Key") || err.message?.includes("403")) {
+        errorMessage = "ไม่พบ API Key หรือ Key ไม่ถูกต้อง กรุณาตรวจสอบการตั้งค่า Environment Variable 'API_KEY' ใน Vercel";
+      } else if (err.message?.includes("400")) {
+        errorMessage = "ไฟล์มีขนาดใหญ่เกินไป หรือรูปแบบไฟล์ไม่ถูกต้อง";
+      }
+
+      setError(errorMessage);
       setStatus(ProcessingStatus.ERROR);
     }
   };
@@ -169,9 +178,20 @@ const App: React.FC = () => {
 
               {/* Error Message */}
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-start gap-2 text-sm">
-                  <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
-                  <span>{error}</span>
+                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex flex-col gap-2 text-sm animate-shake">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
+                    <span className="font-medium">{error}</span>
+                  </div>
+                  {error.includes("API Key") && (
+                    <div className="ml-6 text-xs text-red-500 bg-white p-2 rounded border border-red-100">
+                      <strong className="block mb-1">วิธีแก้ไขสำหรับ Vercel:</strong>
+                      1. ไปที่ Settings {'>'} Environment Variables<br/>
+                      2. เพิ่ม Key ชื่อ: <code>API_KEY</code><br/>
+                      3. ใส่ค่า Gemini API Key ของคุณ<br/>
+                      4. Redeploy แอปพลิเคชันอีกครั้ง
+                    </div>
+                  )}
                 </div>
               )}
 
