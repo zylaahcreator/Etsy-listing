@@ -1,0 +1,5 @@
+{
+  "name": "Etsy Listing Generator AI",
+  "description": "Generates SEO-optimized Etsy listing titles, descriptions, and tags from book PDFs and cover images using Gemini AI.",
+  "requestFramePermissions": []
+}
